@@ -15,6 +15,12 @@ export default function HomePage() {
       setLoading(true)
       setError(null)
       
+      if (!supabase) {
+        setError('Supabase not configured. Please check environment variables.')
+        setEpisodes([])
+        return
+      }
+      
       const { data, error } = await supabase
         .from('episodes')
         .select('*')

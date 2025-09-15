@@ -1,4 +1,4 @@
-import { supabaseHelpers } from '../../lib/supabaseClient'
+import { supabase, createAdminClient } from '../../lib/supabaseClient'
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -34,21 +34,39 @@ async function handleGet(req, res) {
   switch (action) {
     case 'test':
       // Test Supabase connection
-      const connectionTest = await supabaseHelpers.testConnection()
-      return res.status(200).json({
-        message: 'Supabase test endpoint',
-        connection: connectionTest,
-        timestamp: new Date().toISOString()
-      })
+      try {
+        const { error } = await supabase.from('_supabase_migrations').select('*').limit(1)
+        const connectionTest = {
+          success: !error || error.code === 'PGRST116', // PGRST116 = table not found (which is fine)
+          message: !error || error.code === 'PGRST116' ? 'Connected to Supabase successfully' : error.message
+        }
+        return res.status(200).json({
+          message: 'Supabase test endpoint',
+          connection: connectionTest,
+          timestamp: new Date().toISOString()
+        })
+      } catch (error) {
+        return res.status(200).json({
+          message: 'Supabase test endpoint',
+          connection: { success: false, message: error.message },
+          timestamp: new Date().toISOString()
+        })
+      }
 
     case 'episodes':
       // Get all episodes
       try {
-        const episodes = await supabaseHelpers.episodes.getAll()
+        const { data, error } = await supabase
+          .from('episodes')
+          .select('*')
+          .order('created_at', { ascending: false })
+        
+        if (error) throw error
+        
         return res.status(200).json({
           success: true,
-          data: episodes,
-          count: episodes.length
+          data: data,
+          count: data.length
         })
       } catch (error) {
         return res.status(200).json({
@@ -62,11 +80,17 @@ async function handleGet(req, res) {
     case 'payments':
       // Get all payments
       try {
-        const payments = await supabaseHelpers.payments.getAll()
+        const { data, error } = await supabase
+          .from('payments')
+          .select('*')
+          .order('created_at', { ascending: false })
+        
+        if (error) throw error
+        
         return res.status(200).json({
           success: true,
-          data: payments,
-          count: payments.length
+          data: data,
+          count: data.length
         })
       } catch (error) {
         return res.status(200).json({
@@ -124,48 +148,71 @@ async function handlePost(req, res) {
     })
   }
 
-  switch (type) {
-    case 'episode':
-      try {
-        const episode = await supabaseHelpers.episodes.create({
-          ...data,
-          created_at: new Date().toISOString()
-        })
-        return res.status(201).json({
-          success: true,
-          message: 'Episode created successfully',
-          data: episode
-        })
-      } catch (error) {
-        return res.status(400).json({
-          success: false,
-          message: 'Failed to create episode. Table might not exist.',
-          error: error.message
-        })
-      }
+  try {
+    const adminClient = createAdminClient()
 
-    case 'payment':
-      try {
-        const payment = await supabaseHelpers.payments.create({
-          ...data,
-          created_at: new Date().toISOString()
-        })
-        return res.status(201).json({
-          success: true,
-          message: 'Payment record created successfully',
-          data: payment
-        })
-      } catch (error) {
-        return res.status(400).json({
-          success: false,
-          message: 'Failed to create payment record. Table might not exist.',
-          error: error.message
-        })
-      }
+    switch (type) {
+      case 'episode':
+        try {
+          const { data: episode, error } = await adminClient
+            .from('episodes')
+            .insert([{
+              ...data,
+              created_at: new Date().toISOString()
+            }])
+            .select()
+            .single()
+          
+          if (error) throw error
+          
+          return res.status(201).json({
+            success: true,
+            message: 'Episode created successfully',
+            data: episode
+          })
+        } catch (error) {
+          return res.status(400).json({
+            success: false,
+            message: 'Failed to create episode. Table might not exist.',
+            error: error.message
+          })
+        }
 
-    default:
-      return res.status(400).json({
-        error: 'Invalid type. Supported types: episode, payment'
-      })
+      case 'payment':
+        try {
+          const { data: payment, error } = await adminClient
+            .from('payments')
+            .insert([{
+              ...data,
+              created_at: new Date().toISOString()
+            }])
+            .select()
+            .single()
+          
+          if (error) throw error
+          
+          return res.status(201).json({
+            success: true,
+            message: 'Payment record created successfully',
+            data: payment
+          })
+        } catch (error) {
+          return res.status(400).json({
+            success: false,
+            message: 'Failed to create payment record. Table might not exist.',
+            error: error.message
+          })
+        }
+
+      default:
+        return res.status(400).json({
+          error: 'Invalid type. Supported types: episode, payment'
+        })
+    }
+  } catch (error) {
+    return res.status(500).json({
+      error: 'Failed to create admin client',
+      message: error.message
+    })
   }
 }
