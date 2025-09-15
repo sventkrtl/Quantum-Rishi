@@ -103,3 +103,28 @@ For support and questions, please create an issue in the GitHub repository.
 ---
 
 Built with ❤️ for ethical AI and charitable impact.
+
+## Development Branch
+
+For the latest features and updates, please refer to the [development branch](https://github.com/sventkrtl/quantum-rishi/pull/new/feature/supabase-integration).
+
+## Database Schema
+
+-- Episodes table
+CREATE TABLE episodes (
+  id SERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  content TEXT,
+  status TEXT DEFAULT 'draft',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Payments table  
+CREATE TABLE payments (
+  id SERIAL PRIMARY KEY,
+  amount INTEGER NOT NULL,
+  currency TEXT DEFAULT 'INR',
+  status TEXT DEFAULT 'pending',
+  razorpay_payment_id TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
