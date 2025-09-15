@@ -1,0 +1,15 @@
+# Global code owners
+* @sventkrtl
+
+# API routes require extra review
+/pages/api/ @sventkrtl
+/src/app/api/ @sventkrtl
+
+# Configuration files
+*.json @sventkrtl
+*.js @sventkrtl
+*.ts @sventkrtl
+.env* @sventkrtl
+
+# GitHub workflows
+/.github/ @sventkrtl
