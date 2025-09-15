@@ -37,15 +37,24 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 Create a `.env.local` file with:
 
 ```env
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+
+# Razorpay Configuration
 RAZORPAY_WEBHOOK_SECRET=your_webhook_secret_here
+
 # Add other environment variables as needed
 ```
+
+Copy from `.env.local.example` and fill in your actual values.
 
 ## Features
 
 - 🤖 Ethical AI storytelling
 - 💝 Charity-driven mission
 - 🔒 Secure payment processing via Razorpay
+- 🗄️ Supabase database integration for data persistence
 - 📊 Dataset platform for AI training
 - 🌍 Transparent and responsible AI usage
 
@@ -53,6 +62,27 @@ RAZORPAY_WEBHOOK_SECRET=your_webhook_secret_here
 
 ### Webhook Handler
 - `POST /api/razorpay-webhook` - Handles Razorpay payment webhooks
+
+### Supabase Operations
+- `GET /api/supabase` - API documentation and status
+- `GET /api/supabase?action=test` - Test database connection
+- `GET /api/supabase?action=episodes` - Get all episodes
+- `GET /api/supabase?action=payments` - Get all payments
+- `POST /api/supabase` - Create episodes or payment records
+
+### Testing the API
+
+Test Supabase connection:
+```bash
+curl http://localhost:3000/api/supabase?action=test
+```
+
+Create a test episode:
+```bash
+curl -X POST http://localhost:3000/api/supabase \
+  -H "Content-Type: application/json" \
+  -d '{"type": "episode", "data": {"title": "Test Episode", "content": "Hello World", "status": "draft"}}'
+```
 
 ## Contributing
 
