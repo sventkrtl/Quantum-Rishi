@@ -1,0 +1,58 @@
+{
+  "name": "quantum-rishi-job-scheduler",
+  "version": "1.0.0",
+  "description": "AI content generation job scheduler for Quantum Rishi platform",
+  "main": "dist/job-scheduler.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/job-scheduler.js",
+    "dev": "ts-node src/job-scheduler.ts",
+    "watch": "nodemon --exec ts-node src/job-scheduler.ts",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "docker:build": "docker build -t quantum-rishi-scheduler .",
+    "docker:run": "docker run --env-file .env quantum-rishi-scheduler",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop quantum-rishi-scheduler",
+    "pm2:restart": "pm2 restart quantum-rishi-scheduler"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.5",
+    "node-fetch": "^3.3.2",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.9",
+    "@types/node-fetch": "^2.6.8",
+    "@typescript-eslint/eslint-plugin": "^6.9.1",
+    "@typescript-eslint/parser": "^6.9.1",
+    "eslint": "^8.52.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.1",
+    "ts-jest": "^29.1.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "keywords": [
+    "ai",
+    "job-scheduler",
+    "content-generation",
+    "supabase",
+    "quantum-rishi"
+  ],
+  "author": "Quantum Rishi Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sventkrtl/quantum-rishi.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sventkrtl/quantum-rishi/issues"
+  },
+  "homepage": "https://github.com/sventkrtl/quantum-rishi#readme"
+}

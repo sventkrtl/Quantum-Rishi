@@ -61,7 +61,8 @@ Copy from `.env.local.example` and fill in your actual values.
 ## API Routes
 
 ### Webhook Handler
-- `POST /api/razorpay-webhook` - Handles Razorpay payment webhooks
+- `POST /api/razorpay-webhook` - Handles Razorpay payment webhooks (Vercel)
+- Supabase Edge Function: `https://<project-ref>.supabase.co/functions/v1/razorpay-webhook` (Recommended)
 
 ### Supabase Operations
 - `GET /api/supabase` - API documentation and status
@@ -69,6 +70,44 @@ Copy from `.env.local.example` and fill in your actual values.
 - `GET /api/supabase?action=episodes` - Get all episodes
 - `GET /api/supabase?action=payments` - Get all payments
 - `POST /api/supabase` - Create episodes or payment records
+
+## Supabase Edge Functions
+
+### Razorpay Webhook Edge Function
+
+A secure, scalable webhook handler deployed as a Supabase Edge Function:
+
+**Location:** `supabase/functions/razorpay-webhook/index.ts`
+
+**Features:**
+- HMAC SHA256 signature verification
+- Automatic payment processing and credit assignment
+- Comprehensive error handling and logging
+- Support for payment.captured, payment.authorized, payment.failed events
+
+**Deployment:**
+```bash
+# Install Supabase CLI
+npm install -g supabase
+
+# Deploy the function
+supabase functions deploy razorpay-webhook
+
+# Or use the deployment script
+chmod +x supabase/functions/deploy.sh
+./supabase/functions/deploy.sh
+```
+
+**Environment Variables (Set in Supabase Dashboard):**
+- `SUPABASE_URL` - Your Supabase project URL
+- `SUPABASE_SERVICE_ROLE_KEY` - Service role key (server-side only)
+- `RAZORPAY_KEY_SECRET` - Webhook secret from Razorpay dashboard
+
+**Security Notes:**
+- Uses service role key for secure database operations
+- Signature verification ensures requests come from Razorpay
+- Never expose service role key to client-side code
+- Function runs in isolated Deno environment
 
 ### Testing the API
 
