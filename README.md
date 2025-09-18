@@ -149,7 +149,6 @@ For the latest features and updates, please refer to the [development branch](ht
 
 ## Database Schema
 
--- Episodes table
 CREATE TABLE episodes (
   id SERIAL PRIMARY KEY,
   title TEXT NOT NULL,
@@ -158,7 +157,6 @@ CREATE TABLE episodes (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Payments table  
 CREATE TABLE payments (
   id SERIAL PRIMARY KEY,
   amount INTEGER NOT NULL,
@@ -167,3 +165,81 @@ CREATE TABLE payments (
   razorpay_payment_id TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+## Products (new)
+
+A minimal `products` table and example rows have been added as an SQL file you can run in the Supabase SQL editor:
+
+- `supabase/sql/create_products.sql` — creates `products` table and inserts 5 example rows.
+
+The table stores `price_inr` as integer rupees. When creating Razorpay Orders, convert to paise by multiplying by 100.
+
+API route:
+
+- `GET /api/products` — returns all products with an added `price_paise` field.
+- `GET /api/products?id=<uuid>` — returns single product by id with `price_paise`.
+
+Example: `GET http://localhost:3000/api/products`
+
+## Create Razorpay Order (server)
+
+A server-side endpoint is provided to create a Razorpay Order from a product stored in Supabase.
+
+- `POST /api/create-order` — Request body: `{ "productId": "<uuid>", "owner_id": "optional-owner-id" }`.
+
+It reads the product using the server-side Supabase service role key, converts `price_inr` to paise, and calls Razorpay Orders API using Basic Auth. The endpoint returns Razorpay's order response directly.
+
+Required environment variables (server-side):
+
+- `SUPABASE_SERVICE_ROLE_KEY` — service role key for Supabase (server only)
+- `NEXT_PUBLIC_SUPABASE_URL` — Supabase project URL
+- `RAZORPAY_KEY_ID` — Razorpay key id
+- `RAZORPAY_KEY_SECRET` — Razorpay key secret
+
+Security notes:
+
+- Keep Razorpay keys and Supabase service role key secret. In Supabase Edge Functions, add them as function secrets; in Vercel add them to Project > Settings > Environment Variables as server-only.
+
+## Client-side checkout snippet
+
+Add this snippet to your product page (or use the included `pages/product-demo.js`). It creates an order server-side and opens Razorpay Checkout.
+
+Include the Razorpay checkout script (the demo page loads it dynamically):
+
+Client example (vanilla):
+
+```html
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<button id="buyBtn">Buy now</button>
+<script>
+  // create order on the server
+  const res = await fetch('/api/create-order', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ productId: '<PRODUCT_UUID>' })
+  });
+  const order = await res.json();
+
+  const options = {
+    key: 'rzp_test_XXXXXXXXXXXXXXXX', // NEXT_PUBLIC_RAZORPAY_KEY_ID
+    amount: order.amount,
+    currency: order.currency,
+    name: 'Quantum Rishi',
+    description: order.receipt,
+    order_id: order.id,
+    handler: function (response){
+      // post to verify or rely on webhook
+    }
+  };
+
+  const rzp = new Razorpay(options);
+  rzp.open();
+</script>
+```
+
+Environment vars for demo page:
+
+- `NEXT_PUBLIC_RAZORPAY_KEY_ID` — test key id (safe to expose client-side)
+- `NEXT_PUBLIC_DEMO_PRODUCT_ID` — product UUID to load in `pages/product-demo.js` during development
+
+
